@@ -54,7 +54,10 @@ fun CameraScreen(navController: NavController) {
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also { analysis ->
-                        analysis.setAnalyzer(ContextCompat.getMainExecutor(ctx), FrameAnalyzer())
+                        analysis.setAnalyzer(
+                            ContextCompat.getMainExecutor(ctx),
+                            FrameAnalyzer { isPaused }
+                        )
                     }
 
                 cameraProvider.unbindAll()
