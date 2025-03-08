@@ -5,8 +5,8 @@ import alex.kaplenkov.safetyalert.ui.theme.Blue95
 import alex.kaplenkov.safetyalert.ui.theme.PrimaryBlue
 import alex.kaplenkov.safetyalert.ui.theme.PrimaryGrey
 import alex.kaplenkov.safetyalert.ui.theme.Red
-import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
 import alex.kaplenkov.safetyalert.ui.theme.SecondaryBlue
+import android.Manifest
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,16 +36,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -60,7 +62,7 @@ fun MainScreen(controller: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(25.dp),
     ) {
         Text(
             modifier = Modifier.align(Alignment.TopCenter),
@@ -73,7 +75,7 @@ fun MainScreen(controller: NavHostController) {
 
         IconButton(
             modifier = Modifier.align(Alignment.TopEnd),
-            onClick = { controller.navigate("ddd")}
+            onClick = { controller.navigate(SettingScreen) }
         ) {
             Icon(
                 modifier = Modifier.size(60.dp),
@@ -83,11 +85,10 @@ fun MainScreen(controller: NavHostController) {
         }
 
         StartButton(
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
+            navController = controller,
+            violationType = selectedType
         )
-//        ViolationSelector(types) {
-//
-//        }
         Spacer(modifier = Modifier.height(50.dp))
         Column(
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -111,7 +112,9 @@ fun MainScreen(controller: NavHostController) {
                         onClick = { selectedType = it.text }
                     ) {
                         Icon(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp),
                             painter = painterResource(id = it.iconRes),
                             contentDescription = it.text,
                             tint = tintColor
@@ -143,36 +146,30 @@ fun MainScreen(controller: NavHostController) {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-private fun ViolationSelector(violations: List<ViolationType>, onClick: () -> Unit) {
-//    Row(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalArrangement = Arrangement.SpaceEvenly
-//    ) {
-//        violations.forEach {
-//            IconButton(
-//                modifier = Modifier.clip(CircleShape)
-//                    .background(if ())
-//            ) {
-//                Icon(
-//                    modifier = Modifier.size(50.dp),
-//                    painter = painterResource(id = it.iconRes),
-//                    contentDescription = it.text
-//                )
-//            }
-//        }
-//    }
-}
+private fun StartButton(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    violationType: String?
+) {
 
-@Composable
-private fun StartButton(modifier: Modifier = Modifier) {
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         IconButton(
-            modifier = Modifier.clip(CircleShape).size(100.dp),
-            onClick = { },
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(100.dp),
+            onClick = {
+                if (cameraPermissionState.status.isGranted) {
+                    violationType?.let { navController.navigate(CameraScreen) }
+                } else {
+                    cameraPermissionState.launchPermissionRequest()
+                }
+            },
             colors = IconButtonDefaults.iconButtonColors(
                 containerColor = SecondaryBlue,
                 contentColor = Color.White
@@ -193,14 +190,6 @@ private fun StartButton(modifier: Modifier = Modifier) {
         )
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun Preview() {
-//    SafetyAlertTheme {
-//        MainScreen()
-//    }
-//}
 
 private data class ViolationType(val text: String, @DrawableRes val iconRes: Int)
 

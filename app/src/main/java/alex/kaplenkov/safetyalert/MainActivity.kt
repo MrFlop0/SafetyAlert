@@ -1,6 +1,10 @@
 package alex.kaplenkov.safetyalert
 
+import alex.kaplenkov.safetyalert.presentation.ui.CameraScreen
+import alex.kaplenkov.safetyalert.presentation.ui.LoginScreen
 import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
+import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
+import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,10 +27,22 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = MainScreen
+                    startDestination = RegisterScreen
                 ) {
                     composable<MainScreen> {
                         MainScreen(navController)
+                    }
+                    composable<SettingScreen> {
+                        SettingScreen(navController)
+                    }
+                    composable<LoginScreen> {
+                        LoginScreen(navController)
+                    }
+                    composable<RegisterScreen> {
+                        RegisterScreen(navController)
+                    }
+                    composable<CameraScreen> {
+                        CameraScreen(navController)
                     }
                 }
 

@@ -10,6 +10,8 @@ activityCompose = "1.8.0"
 composeBom = "2024.04.01"
 nav = "2.8.8"
 ser = "1.6.3"
+cameraX = "1.4.1"
+accompanist = "0.30.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +30,11 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "nav" }
 kotlinx-serialization = {module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "ser"}
+cameraX-core = {module = "androidx.camera:camera-core", version.ref = "cameraX"}
+cameraX-camera = {module = "androidx.camera:camera-camera2", version.ref = "cameraX"}
+cameraX-lifecycle = {module = "androidx.camera:camera-lifecycle", version.ref = "cameraX"}
+cameraX-view = {module = "androidx.camera:camera-view", version.ref = "cameraX"}
+acompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

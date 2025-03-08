@@ -42,6 +42,12 @@ android {
 
 dependencies {
 
+    implementation(libs.cameraX.core)
+    implementation(libs.cameraX.lifecycle)
+    implementation(libs.cameraX.camera)
+    implementation(libs.cameraX.view)
+    implementation(libs.acompanist.permissions)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
