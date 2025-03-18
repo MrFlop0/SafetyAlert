@@ -5,6 +5,7 @@ import alex.kaplenkov.safetyalert.presentation.ui.LoginScreen
 import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
 import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
+import alex.kaplenkov.safetyalert.presentation.ui.SummaryScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -43,6 +44,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<CameraScreen> {
                         CameraScreen(navController)
+                    }
+                    composable<SummaryScreen> {
+                        SummaryScreen(navController)
                     }
                 }
 

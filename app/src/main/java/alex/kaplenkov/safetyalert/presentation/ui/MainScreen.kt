@@ -65,7 +65,8 @@ fun MainScreen(controller: NavHostController) {
             .padding(25.dp),
     ) {
         Text(
-            modifier = Modifier.align(Alignment.TopCenter),
+            modifier = Modifier.align(Alignment.TopCenter)
+                .padding(top = 25.dp),
             text = "SafetyAlert",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,

@@ -31,6 +31,8 @@ fun CommonTextField(
         maxLines = 1,
         singleLine = true,
         colors = TextFieldDefaults.outlinedTextFieldColors(
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black,
             focusedBorderColor = SecondaryBlue,
             cursorColor = Color.Black
         ),

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ fun CameraScreen(navController: NavController) {
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
 
     var isPaused by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -56,7 +58,7 @@ fun CameraScreen(navController: NavController) {
                     .also { analysis ->
                         analysis.setAnalyzer(
                             ContextCompat.getMainExecutor(ctx),
-                            FrameAnalyzer { isPaused }
+                            FrameAnalyzer(context) { isPaused }
                         )
                     }
 
@@ -86,16 +88,40 @@ fun CameraScreen(navController: NavController) {
                     containerColor = if (isPaused) Color.Red else Color.Green
                 )
             ) {
-                Text(if (isPaused) "Resume" else "Pause")
+                Text(if (isPaused) "Продолжить" else "Пауза")
             }
             Spacer(modifier = Modifier.height(10.dp))
             Button(
-                onClick = { navController.popBackStack() },
+                onClick = { showExitDialog = true }, //navController.popBackStack() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
             ) {
-                Text("Exit")
+                Text("Назад")
             }
         }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false }, // Close if background clicked
+            title = { Text("Выйти?") },
+            text = { Text("Вы уверены что хотите закончить сьемку?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        navController.navigate(SummaryScreen)
+                        //navController.popBackStack() // Exit screen
+                    }
+                ) {
+                    Text("Да")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showExitDialog = false }) {
+                    Text("Нет")
+                }
+            }
+        )
     }
 }
 
