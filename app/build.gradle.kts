@@ -47,6 +47,11 @@ dependencies {
     implementation(libs.cameraX.camera)
     implementation(libs.cameraX.view)
     implementation(libs.acompanist.permissions)
+    implementation(libs.tenserflow)
+    implementation(libs.tensorflow.gpu)
+    implementation(libs.tensorflow.support)
+
+    implementation(libs.chanquopy)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
