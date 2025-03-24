@@ -6,6 +6,7 @@ import alex.kaplenkov.safetyalert.data.model.DetectionResult
 import alex.kaplenkov.safetyalert.data.model.HelmetDetection
 import alex.kaplenkov.safetyalert.data.model.KeypointType
 import alex.kaplenkov.safetyalert.data.model.PersonDetection
+import alex.kaplenkov.safetyalert.presentation.viewmodel.CameraViewModel
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.serialization.Serializable
 import java.util.concurrent.Executors
@@ -56,7 +59,10 @@ private const val TARGET_RESOLUTION_WIDTH = 640
 private const val TARGET_RESOLUTION_HEIGHT = 480
 
 @Composable
-fun CameraScreen(navController: NavController) {
+fun CameraScreen(
+    navController: NavController,
+    viewModel: CameraViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -64,8 +70,8 @@ fun CameraScreen(navController: NavController) {
     var isPaused by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
     var detectionResult by remember { mutableStateOf<DetectionResult?>(null) }
-    var previewWidth by remember { mutableStateOf(0) }
-    var previewHeight by remember { mutableStateOf(0) }
+    var previewWidth by remember { mutableIntStateOf(0) }
+    var previewHeight by remember { mutableIntStateOf(0) }
 
     // Resources
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
@@ -107,7 +113,7 @@ fun CameraScreen(navController: NavController) {
                         .setTargetResolution(targetResolution)
                         .build()
                         .also {
-                            it.setSurfaceProvider(previewView.surfaceProvider)
+                            it.surfaceProvider = previewView.surfaceProvider
                         }
 
                     // Set up image analyzer
@@ -587,4 +593,3 @@ data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val 
 
 @Serializable
 object CameraScreen
-

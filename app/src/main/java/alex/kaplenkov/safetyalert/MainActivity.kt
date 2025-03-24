@@ -4,6 +4,7 @@ import alex.kaplenkov.safetyalert.presentation.ui.CameraScreen
 import alex.kaplenkov.safetyalert.presentation.ui.LoginScreen
 import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
 import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
+import alex.kaplenkov.safetyalert.presentation.ui.ReportListScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SummaryScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
@@ -43,6 +44,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<SummaryScreen> {
                         SummaryScreen(navController)
+                    }
+                    composable<ReportListScreen> {
+                        ReportListScreen(navController)
                     }
                 }
             }
