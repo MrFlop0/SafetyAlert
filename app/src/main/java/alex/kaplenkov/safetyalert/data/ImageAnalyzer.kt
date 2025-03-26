@@ -37,18 +37,6 @@ class ImageAnalyzer(
             val result = detectionManager.runDetection(bitmap)
 
             callback(result)
-
-            // Update UI on main thread
-//            runOnUiThread {
-//                binding.overlay.setDetectionResult(
-//                    result,
-//                    originalWidth,
-//                    originalHeight,
-//                    previewWidth,
-//                    previewHeight
-//                )
-//                isProcessing = false
-//            }
         }
 
         imageProxy.close()

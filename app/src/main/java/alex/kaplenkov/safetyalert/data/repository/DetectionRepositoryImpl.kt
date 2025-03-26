@@ -67,7 +67,7 @@ class DetectionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDetection(detectionId: String): Boolean {
-        // TODO implementation would need to:
+        // TODO(impl)
         // 1. Find which report this detection belongs to
         // 2. Remove the detection from the report's entry list
         // 3. Delete the detection file

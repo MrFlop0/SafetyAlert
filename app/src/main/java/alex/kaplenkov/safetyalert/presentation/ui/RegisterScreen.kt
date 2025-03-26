@@ -92,12 +92,5 @@ fun RegisterScreen(navController: NavController) {
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun Preview() {
-//    val navController = rememberNavController()
-//    RegisterScreen(navController)
-//}
-
 @Serializable
 object RegisterScreen

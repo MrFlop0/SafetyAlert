@@ -69,10 +69,19 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
+
+//    testImplementation(libs.mockito)
+//    testImplementation(libs.mockito.kotlin)
+//    testImplementation(libs.test.mockitokotlin2)
+    //testImplementation(libs.test.coroutines)
+    testImplementation("org.mockito:mockito-core:5.2.0") // or newer version
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1") // already in your dependencies
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    //androidTestImplementation(libs.kotlinx.coroutines.test.v180)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

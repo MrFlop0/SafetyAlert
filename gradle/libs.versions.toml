@@ -5,6 +5,7 @@ coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+kotlinxCoroutinesTest = "1.8.0"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.04.01"
@@ -13,9 +14,10 @@ ser = "1.6.3"
 cameraX = "1.4.1"
 accompanist = "0.30.1"
 tensorflow = "2.11.0"
-chanquopy = "16.0.0"
 tensorflow-lite-support = "0.2.0"
 hilt = "2.50"
+mockito = "3.3.3"
+mockito-kotlin-version = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +35,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "nav" }
+kotlinx-coroutines-test-v180 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-serialization = {module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "ser"}
 cameraX-core = {module = "androidx.camera:camera-core", version.ref = "cameraX"}
 cameraX-camera = {module = "androidx.camera:camera-camera2", version.ref = "cameraX"}
@@ -40,14 +43,17 @@ cameraX-lifecycle = {module = "androidx.camera:camera-lifecycle", version.ref = 
 cameraX-view = {module = "androidx.camera:camera-view", version.ref = "cameraX"}
 acompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist"}
 tenserflow = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflow" }
-chanquopy = {module = "com.chaquo.python:gradle", version.ref = "chanquopy"}
 tensorflow-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflow-lite-support"}
 tensorflow-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflow"}
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
-
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "5.2.1" }
+test-mockitokotlin2 = { module = "com.nhaarman.mockitokotlin2:mockito-kotlin", version.ref = "mockito-kotlin-version" }
+test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
