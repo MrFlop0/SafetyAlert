@@ -1,10 +1,12 @@
 package alex.kaplenkov.safetyalert
 
+import alex.kaplenkov.safetyalert.di.AppModule
 import alex.kaplenkov.safetyalert.presentation.ui.CameraScreen
 import alex.kaplenkov.safetyalert.presentation.ui.LoginScreen
 import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
 import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
 import alex.kaplenkov.safetyalert.presentation.ui.ReportListScreen
+import alex.kaplenkov.safetyalert.presentation.ui.ReportScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SummaryScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
@@ -12,6 +14,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,6 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SafetyAlertTheme {
                 val navController = rememberNavController()
+                val context = LocalContext.current
                 NavHost(
                     navController = navController,
                     startDestination = RegisterScreen
@@ -49,6 +53,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<ReportListScreen> {
                         ReportListScreen(navController)
+                    }
+                    composable<ReportScreen> {
+                        ReportScreen()
                     }
                 }
             }

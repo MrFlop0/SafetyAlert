@@ -1,10 +1,13 @@
 package alex.kaplenkov.safetyalert.di
 
 import alex.kaplenkov.safetyalert.data.datasource.local.ReportLocalDataSource
+import alex.kaplenkov.safetyalert.data.db.SafetyAlertDatabase
 import alex.kaplenkov.safetyalert.data.repository.DetectionRepositoryImpl
+import alex.kaplenkov.safetyalert.data.repository.LocalViolationRepository
 import alex.kaplenkov.safetyalert.data.repository.ReportRepositoryImpl
 import alex.kaplenkov.safetyalert.domain.repository.DetectionRepository
 import alex.kaplenkov.safetyalert.domain.repository.ReportRepository
+import alex.kaplenkov.safetyalert.presentation.viewmodel.ViolationViewModel
 import android.content.Context
 import dagger.Module
 import dagger.Provides
@@ -38,4 +41,20 @@ object AppModule {
     ): DetectionRepository {
         return DetectionRepositoryImpl(localDataSource)
     }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context) = SafetyAlertDatabase.getDatabase(context)
+
+    @Provides
+    @Singleton
+    fun provideViolationDao(database: SafetyAlertDatabase) = database.violationDao()
+
+    @Provides
+    @Singleton
+    fun provideLocalViolationRepository(@ApplicationContext context: Context): LocalViolationRepository {
+        val database = provideDatabase(context)
+        return LocalViolationRepository(provideViolationDao(database), context)
+    }
+
 }

@@ -218,7 +218,7 @@ fun CameraScreen(
                 Button(
                     onClick = {
                         showExitDialog = false
-                        navController.navigate(SummaryScreen)
+                        navController.navigate(ReportScreen)
                     }
                 ) {
                     Text("Да")

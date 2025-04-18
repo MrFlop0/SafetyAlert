@@ -9,6 +9,7 @@ kotlinxCoroutinesTest = "1.8.0"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.04.01"
+mockitoCore = "5.2.0"
 nav = "2.8.8"
 ser = "1.6.3"
 cameraX = "1.4.1"
@@ -18,6 +19,8 @@ tensorflow-lite-support = "0.2.0"
 hilt = "2.50"
 mockito = "3.3.3"
 mockito-kotlin-version = "2.1.0"
+room = "2.6.0"
+coil= "2.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +45,7 @@ cameraX-camera = {module = "androidx.camera:camera-camera2", version.ref = "came
 cameraX-lifecycle = {module = "androidx.camera:camera-lifecycle", version.ref = "cameraX"}
 cameraX-view = {module = "androidx.camera:camera-view", version.ref = "cameraX"}
 acompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist"}
+mockito-core-v520 = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 tenserflow = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflow" }
 tensorflow-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflow-lite-support"}
 tensorflow-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflow"}
@@ -49,11 +53,17 @@ tensorflow-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
-mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "5.2.1" }
 test-mockitokotlin2 = { module = "com.nhaarman.mockitokotlin2:mockito-kotlin", version.ref = "mockito-kotlin-version" }
-test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin" }
+
+room-runtime = {module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = {module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = {module = "androidx.room:room-compiler", version.ref = "room"}
+
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
