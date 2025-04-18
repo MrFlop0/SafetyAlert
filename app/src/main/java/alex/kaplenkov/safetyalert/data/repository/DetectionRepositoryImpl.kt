@@ -24,17 +24,17 @@ class DetectionRepositoryImpl @Inject constructor(
         detectionResult: DetectionResult,
         image: Bitmap
     ): DetectionEntry? {
-        // Generate filename for image
+         
         val timestamp = System.currentTimeMillis()
         val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val timeString = dateFormat.format(Date(timestamp))
         val filename = "detection_${timeString}_${timestamp}.jpg"
 
-        // Save image
+         
         val imagePath = localDataSource.saveImage(image, filename)
         if (imagePath.isEmpty()) return null
 
-        // Create entry
+         
         val entry = DetectionEntryDto(
             id = UUID.randomUUID().toString(),
             reportId = reportId,
@@ -46,11 +46,11 @@ class DetectionRepositoryImpl @Inject constructor(
             processingTimeMs = detectionResult.processingTimeMs
         )
 
-        // Save entry
+         
         val saved = localDataSource.saveDetectionEntry(entry)
         if (!saved) return null
 
-        // Update report with the new entry
+         
         val report = localDataSource.getReport(reportId) ?: return null
         val updatedReport = report.copy(entryIds = report.entryIds + entry.id)
         localDataSource.saveReport(updatedReport)
@@ -67,11 +67,11 @@ class DetectionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDetection(detectionId: String): Boolean {
-        // TODO(impl)
-        // 1. Find which report this detection belongs to
-        // 2. Remove the detection from the report's entry list
-        // 3. Delete the detection file
-        // 4. Delete the image file
+         
+         
+         
+         
+         
         return false
     }
 }

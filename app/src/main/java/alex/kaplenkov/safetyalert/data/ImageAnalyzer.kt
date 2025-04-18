@@ -10,13 +10,38 @@ import androidx.camera.core.ImageProxy
 class ImageAnalyzer(
     private val isProcessing: () -> Boolean,
     private val detectionManager: DetectionManager,
-    private val callback: (DetectionResult?) -> Unit,
+    private val callback: (DetectionResult?, Bitmap?) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
     @androidx.camera.core.ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
+//        if (isProcessing()) {
+//            callback(null)
+//            imageProxy.close()
+//            return
+//        }
+//
+//        // Convert ImageProxy to Bitmap
+//        val bitmap = imageProxyToBitmap(imageProxy)
+//
+//        // Process image in a background thread
+//        if (bitmap != null) {
+//            // Save the original image dimensions
+//            val originalWidth = bitmap.width
+//            val originalHeight = bitmap.height
+//
+//            // Log dimensions for debugging
+//            Log.d(TAG, "Processing image: $originalWidth x $originalHeight")
+//
+//            // Run detection
+//            val result = detectionManager.runDetection(bitmap)
+//
+//            callback(result)
+//        }
+//
+//        imageProxy.close()
         if (isProcessing()) {
-            callback(null)
+            callback(null, null)
             imageProxy.close()
             return
         }
@@ -36,7 +61,9 @@ class ImageAnalyzer(
             // Run detection
             val result = detectionManager.runDetection(bitmap)
 
-            callback(result)
+            callback(result, bitmap) // Pass both result and bitmap to callback
+        } else {
+            callback(null, null)
         }
 
         imageProxy.close()

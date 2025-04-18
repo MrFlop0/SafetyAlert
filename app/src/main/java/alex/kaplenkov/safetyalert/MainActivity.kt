@@ -1,23 +1,21 @@
 package alex.kaplenkov.safetyalert
 
-import alex.kaplenkov.safetyalert.di.AppModule
+import alex.kaplenkov.safetyalert.presentation.ui.AllViolationsScreen
 import alex.kaplenkov.safetyalert.presentation.ui.CameraScreen
 import alex.kaplenkov.safetyalert.presentation.ui.LoginScreen
 import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
 import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
-import alex.kaplenkov.safetyalert.presentation.ui.ReportListScreen
 import alex.kaplenkov.safetyalert.presentation.ui.ReportScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
-import alex.kaplenkov.safetyalert.presentation.ui.SummaryScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -28,10 +26,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             SafetyAlertTheme {
                 val navController = rememberNavController()
-                val context = LocalContext.current
                 NavHost(
                     navController = navController,
-                    startDestination = RegisterScreen
+                    startDestination = MainScreen
                 ) {
                     composable<MainScreen> {
                         MainScreen(navController)
@@ -48,14 +45,15 @@ class MainActivity : ComponentActivity() {
                     composable<CameraScreen> {
                         CameraScreen(navController)
                     }
-                    composable<SummaryScreen> {
-                        SummaryScreen(navController)
-                    }
-                    composable<ReportListScreen> {
-                        ReportListScreen(navController)
-                    }
                     composable<ReportScreen> {
-                        ReportScreen()
+                        val args = it.toRoute<ReportScreen>()
+                        ReportScreen(
+                            navController = navController,
+                            sessionId = args.sessionId
+                        )
+                    }
+                    composable<AllViolationsScreen> {
+                        AllViolationsScreen(navController)
                     }
                 }
             }

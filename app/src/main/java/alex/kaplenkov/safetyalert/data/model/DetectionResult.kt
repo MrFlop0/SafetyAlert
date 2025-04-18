@@ -1,5 +1,6 @@
 package alex.kaplenkov.safetyalert.data.model
 
+import android.graphics.Bitmap
 import android.graphics.RectF
 
 data class DetectionResult(
@@ -7,7 +8,8 @@ data class DetectionResult(
     val helmetDetections: List<HelmetDetection>,
     val processingTimeMs: Long,
     val imageWidth: Int,
-    val imageHeight: Int
+    val imageHeight: Int,
+    var bitmap: Bitmap? = null
 )
 
 data class PersonDetection(

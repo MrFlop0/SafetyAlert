@@ -26,21 +26,20 @@ class DetectionManager(context: Context) {
     fun runDetection(bitmap: Bitmap): DetectionResult {
         val startTime = System.currentTimeMillis()
 
-        // Run person detection
+         
         val personDetections = poseDetector.detect(bitmap)
 
-        // Run helmet detection
+         
         val helmetDetections = helmetDetector.detect(bitmap).toMutableList()
 
         Log.d(TAG, "Found ${personDetections.size} people and ${helmetDetections.size} helmets")
 
-        // Associate helmets with people
+         
         val updatedPersonDetections = personDetections.map { person ->
             val headBbox = person.headBoundingBox
             if (headBbox != null) {
                 val (hasHelmet, helmetIndex) = checkHelmet(headBbox, helmetDetections)
 
-                // Mark helmet as associated if found
                 if (helmetIndex >= 0) {
                     helmetDetections[helmetIndex] = helmetDetections[helmetIndex].copy(isAssociated = true)
                 }
@@ -79,18 +78,16 @@ class DetectionManager(context: Context) {
             }
         }
 
-        // If IoU is above threshold or helmet overlaps with head in any way
         val hasHelmet = maxIoU > IOU_THRESHOLD || checkOverlap(headBbox,
             helmetDetections.getOrNull(bestHelmetIdx)?.boundingBox)
 
         return Pair(hasHelmet, bestHelmetIdx)
     }
 
-    // Additional check for any overlap between head and helmet
+     
     private fun checkOverlap(headBox: RectF, helmetBox: RectF?): Boolean {
         if (helmetBox == null) return false
 
-        // Check if rectangles overlap at all
         return !(headBox.right < helmetBox.left ||
                 headBox.left > helmetBox.right ||
                 headBox.bottom < helmetBox.top ||

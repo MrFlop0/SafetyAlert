@@ -52,7 +52,7 @@ class ReportDetailViewModel @Inject constructor(
                 val report = getReportByIdUseCase(reportId)
 
                 if (report != null) {
-                    // Load image thumbnails for each entry
+                     
                     val entryImages = report.entries.associateWith { entry ->
                         getDetectionImageUseCase(entry.imagePath)
                     }
@@ -89,7 +89,7 @@ class ReportDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Create text summary
+                 
                 val summaryText = buildString {
                     append("Safety Alert Detection Report\n\n")
                     append("Date: ${report.startTime}\n")
@@ -106,20 +106,20 @@ class ReportDetailViewModel @Inject constructor(
                     }
                 }
 
-                // Save summary to file
+                 
                 val summaryFile = File(context.cacheDir, "report_summary.txt")
                 FileOutputStream(summaryFile).use { it.write(summaryText.toByteArray()) }
 
-                // Create share intent
+                 
                 val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
                     type = "*/*"
                     putExtra(Intent.EXTRA_SUBJECT, "Safety Alert Report - ${report.startTime}")
                     putExtra(Intent.EXTRA_TEXT, summaryText)
 
-                    // Add summary and images to intent
+                     
                     val uris = ArrayList<Uri>()
 
-                    // Add summary file
+                     
                     val summaryUri = FileProvider.getUriForFile(
                         context,
                         "${context.packageName}.provider",
@@ -127,7 +127,7 @@ class ReportDetailViewModel @Inject constructor(
                     )
                     uris.add(summaryUri)
 
-                    // Add images
+                     
                     for (entry in report.entries) {
                         val imageFile = File(entry.imagePath)
                         if (imageFile.exists()) {
