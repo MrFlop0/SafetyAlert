@@ -7,6 +7,7 @@ import alex.kaplenkov.safetyalert.presentation.ui.MainScreen
 import alex.kaplenkov.safetyalert.presentation.ui.RegisterScreen
 import alex.kaplenkov.safetyalert.presentation.ui.ReportScreen
 import alex.kaplenkov.safetyalert.presentation.ui.SettingScreen
+import alex.kaplenkov.safetyalert.presentation.ui.ViolationDetailScreen
 import alex.kaplenkov.safetyalert.ui.theme.SafetyAlertTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -43,13 +44,24 @@ class MainActivity : ComponentActivity() {
                         RegisterScreen(navController)
                     }
                     composable<CameraScreen> {
-                        CameraScreen(navController)
+                        val args = it.toRoute<CameraScreen>()
+                        CameraScreen(
+                            navController = navController,
+                            violationType = args.violation
+                        )
                     }
                     composable<ReportScreen> {
                         val args = it.toRoute<ReportScreen>()
                         ReportScreen(
                             navController = navController,
                             sessionId = args.sessionId
+                        )
+                    }
+                    composable<ViolationDetailScreen> {
+                        val args = it.toRoute<ViolationDetailScreen>()
+                        ViolationDetailScreen(
+                            navController = navController,
+                            violationId = args.violationId
                         )
                     }
                     composable<AllViolationsScreen> {

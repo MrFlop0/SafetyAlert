@@ -4,11 +4,15 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 
 data class DetectionResult(
-    val personDetections: List<PersonDetection>,
-    val helmetDetections: List<HelmetDetection>,
-    val processingTimeMs: Long,
-    val imageWidth: Int,
-    val imageHeight: Int,
+    val personDetections: List<PersonDetection> = emptyList(),
+    val helmetDetections: List<HelmetDetection> = emptyList(),
+    val holdsHandrail: Boolean = false,
+    val handrailScore: Float = 0f,
+    val unsafeScore: Float = 0f,
+    val detectionType: ViolationType? = null,
+    val processingTimeMs: Long = 0,
+    val imageWidth: Int = 0,
+    val imageHeight: Int = 0,
     var bitmap: Bitmap? = null
 )
 
@@ -16,8 +20,9 @@ data class PersonDetection(
     val boundingBox: RectF,
     val confidence: Float,
     val keypoints: List<Keypoint>,
+    val headBoundingBox: RectF? = null,
     val hasHelmet: Boolean = false,
-    val headBoundingBox: RectF? = null
+    val holdsHandrail: Boolean = false
 )
 
 data class HelmetDetection(

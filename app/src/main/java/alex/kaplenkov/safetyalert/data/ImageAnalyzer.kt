@@ -15,53 +15,28 @@ class ImageAnalyzer(
 
     @androidx.camera.core.ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
-//        if (isProcessing()) {
-//            callback(null)
-//            imageProxy.close()
-//            return
-//        }
-//
-//        // Convert ImageProxy to Bitmap
-//        val bitmap = imageProxyToBitmap(imageProxy)
-//
-//        // Process image in a background thread
-//        if (bitmap != null) {
-//            // Save the original image dimensions
-//            val originalWidth = bitmap.width
-//            val originalHeight = bitmap.height
-//
-//            // Log dimensions for debugging
-//            Log.d(TAG, "Processing image: $originalWidth x $originalHeight")
-//
-//            // Run detection
-//            val result = detectionManager.runDetection(bitmap)
-//
-//            callback(result)
-//        }
-//
-//        imageProxy.close()
         if (isProcessing()) {
             callback(null, null)
             imageProxy.close()
             return
         }
 
-        // Convert ImageProxy to Bitmap
+
         val bitmap = imageProxyToBitmap(imageProxy)
 
-        // Process image in a background thread
+
         if (bitmap != null) {
-            // Save the original image dimensions
+
             val originalWidth = bitmap.width
             val originalHeight = bitmap.height
 
-            // Log dimensions for debugging
+
             Log.d(TAG, "Processing image: $originalWidth x $originalHeight")
 
-            // Run detection
+
             val result = detectionManager.runDetection(bitmap)
 
-            callback(result, bitmap) // Pass both result and bitmap to callback
+            callback(result, bitmap)
         } else {
             callback(null, null)
         }
@@ -74,7 +49,7 @@ class ImageAnalyzer(
     private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap? {
         val image = imageProxy.image ?: return null
 
-        // Get the YUV data
+
         val yBuffer = image.planes[0].buffer
         val uBuffer = image.planes[1].buffer
         val vBuffer = image.planes[2].buffer

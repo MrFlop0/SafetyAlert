@@ -49,6 +49,7 @@ mockito-core-v520 = { module = "org.mockito:mockito-core", version.ref = "mockit
 tenserflow = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflow" }
 tensorflow-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflow-lite-support"}
 tensorflow-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflow"}
+tensorflow-select-ops = { module = "org.tensorflow:tensorflow-lite-select-tf-ops", version.ref = "tensorflow" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }

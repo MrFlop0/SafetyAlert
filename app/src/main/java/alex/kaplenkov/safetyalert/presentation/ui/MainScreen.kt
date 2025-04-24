@@ -1,6 +1,7 @@
 package alex.kaplenkov.safetyalert.presentation.ui
 
 import alex.kaplenkov.safetyalert.R
+import alex.kaplenkov.safetyalert.data.model.ViolationType
 import alex.kaplenkov.safetyalert.ui.theme.Blue95
 import alex.kaplenkov.safetyalert.ui.theme.PrimaryBlue
 import alex.kaplenkov.safetyalert.ui.theme.PrimaryGrey
@@ -53,11 +54,6 @@ import kotlinx.serialization.Serializable
 @Composable
 fun MainScreen(controller: NavHostController) {
     var selectedType by remember { mutableStateOf<String?>(null) }
-    val types = listOf(
-        ViolationType("Курение в неположенном месте", R.drawable.smoke_icon),
-        ViolationType("Несоблюдение обязательного использования поручня", R.drawable.stairs_icon),
-        ViolationType("Нарушение норм по ношению каски", R.drawable.helmet_icon)
-    )
 
     Box(
         modifier = Modifier
@@ -98,9 +94,9 @@ fun MainScreen(controller: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                types.forEach {
+                ViolationType.entries.forEach {
                     val (backgroundColor, tintColor) =
-                        if (selectedType == it.text) {
+                        if (selectedType == it.displayName) {
                             SecondaryBlue to Red
                         } else {
                             PrimaryBlue to Color.Black
@@ -110,14 +106,14 @@ fun MainScreen(controller: NavHostController) {
                             .clip(CircleShape)
                             .size(60.dp)
                             .background(backgroundColor),
-                        onClick = { selectedType = it.text }
+                        onClick = { selectedType = it.displayName }
                     ) {
                         Icon(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(10.dp),
                             painter = painterResource(id = it.iconRes),
-                            contentDescription = it.text,
+                            contentDescription = it.displayName,
                             tint = tintColor
                         )
                     }
@@ -166,7 +162,7 @@ private fun StartButton(
                 .size(100.dp),
             onClick = {
                 if (cameraPermissionState.status.isGranted) {
-                    violationType?.let { navController.navigate(CameraScreen) }
+                    violationType?.let { navController.navigate(CameraScreen(violation = violationType)) }
                 } else {
                     cameraPermissionState.launchPermissionRequest()
                 }

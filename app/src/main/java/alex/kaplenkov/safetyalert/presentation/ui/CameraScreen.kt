@@ -6,6 +6,7 @@ import alex.kaplenkov.safetyalert.data.model.DetectionResult
 import alex.kaplenkov.safetyalert.data.model.HelmetDetection
 import alex.kaplenkov.safetyalert.data.model.KeypointType
 import alex.kaplenkov.safetyalert.data.model.PersonDetection
+import alex.kaplenkov.safetyalert.data.model.ViolationType
 import alex.kaplenkov.safetyalert.domain.model.Violation
 import alex.kaplenkov.safetyalert.presentation.viewmodel.ViolationViewModel
 import alex.kaplenkov.safetyalert.utils.BitmapUtils
@@ -55,7 +56,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -68,15 +68,21 @@ private const val VIOLATION_SAVE_INTERVAL_MS = 5000
 @Composable
 fun CameraScreen(
     navController: NavController,
-    violationViewModel: ViolationViewModel = hiltViewModel()
+    violationViewModel: ViolationViewModel = hiltViewModel(),
+    violationType: String = ViolationType.HELMET.displayName
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    val detectionType = remember {
+        ViolationType.fromDisplayName(violationType) ?: ViolationType.HELMET
+    }
+
     LaunchedEffect(Unit) {
         violationViewModel.startNewSession()
+        Log.d("CameraScreen", "Session ID at launch: ${violationViewModel.currentSessionId.value}")
     }
-    
+
     var isPaused by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
     var detectionResult by remember { mutableStateOf<DetectionResult?>(null) }
@@ -90,54 +96,63 @@ fun CameraScreen(
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val detectionManager = remember { DetectionManager(context) }
 
+    LaunchedEffect(detectionType) {
+        detectionManager.setDetectionType(detectionType)
+    }
+
     LaunchedEffect(detectionResult) {
         detectionResult?.let { result ->
             val currentTime = System.currentTimeMillis()
 
-            val peopleWithoutHelmets = result.personDetections.filter { !it.hasHelmet }
 
-            if (peopleWithoutHelmets.isNotEmpty() &&
+            val hasViolation = when (detectionType) {
+                ViolationType.HELMET -> result.personDetections.any { !it.hasHelmet }
+                ViolationType.HANDRAIL -> result.unsafeScore > 0.9f && !result.holdsHandrail
+                else -> false
+            }
+
+            if (hasViolation &&
                 currentTime - lastSaveTimestamp > VIOLATION_SAVE_INTERVAL_MS &&
                 !isSavingViolation.get()
             ) {
-
-                 
                 if (isSavingViolation.compareAndSet(false, true)) {
                     try {
-                        Log.d(
-                            TAG,
-                            "Starting violation save process. Time since last save: ${currentTime - lastSaveTimestamp}ms"
-                        )
-
-                         
+                        Log.d(TAG, "Starting violation save process. Time since last save: ${currentTime - lastSaveTimestamp}ms")
                         lastSaveTimestamp = currentTime
 
-                         
+                        Log.d("SessionId", "${violationViewModel.currentSessionId.value} in CameraScreen")
                         result.bitmap?.let { originalBitmap ->
-                             
-                            val violationBitmap =
-                                BitmapUtils.createViolationBitmap(originalBitmap, result)
+                            val violationBitmap = BitmapUtils.createViolationBitmap(originalBitmap, result)
 
-                             
-                            peopleWithoutHelmets.forEachIndexed { index, person ->
-                                val violation = Violation(
-                                    type = "Safety Helmet Violation",
-                                    confidence = person.confidence,
-                                    description = "Person detected without proper head protection",
-                                    location = "Worksite area",
-                                    sessionId = violationViewModel.currentSessionId.value
-                                )
+                            when (detectionType) {
+                                ViolationType.HELMET -> {
 
-                                 
-                                violationViewModel.saveViolation(violation, violationBitmap)
-                                Log.d(TAG, "Saved violation at ${System.currentTimeMillis()}")
+                                    result.personDetections.filter { !it.hasHelmet }.forEach { person ->
+                                        val violation = Violation(
+                                            type = "Safety Helmet Violation",
+                                            confidence = person.confidence,
+                                            description = "Person detected without proper head protection",
+                                            location = "Worksite area",
+                                            sessionId = violationViewModel.currentSessionId.value
+                                        )
+                                        violationViewModel.saveViolation(violation, violationBitmap)
+                                    }
+                                }
+                                ViolationType.HANDRAIL -> {
 
-                                 
-                                delay(100)
+                                    val violation = Violation(
+                                        type = "Stair Safety Violation",
+                                        confidence = result.unsafeScore,
+                                        description = "Person not holding handrail on stairs",
+                                        location = "Staircase area",
+                                        sessionId = violationViewModel.currentSessionId.value
+                                    )
+                                    violationViewModel.saveViolation(violation, violationBitmap)
+                                }
+                                else -> {}
                             }
                         }
                     } finally {
-                         
                         isSavingViolation.set(false)
                     }
                 }
@@ -145,7 +160,7 @@ fun CameraScreen(
         }
     }
 
-     
+
     DisposableEffect(Unit) {
         onDispose {
             detectionManager.close()
@@ -154,7 +169,7 @@ fun CameraScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-         
+
         AndroidView(
             factory = { ctx ->
                 val previewView = PreviewView(ctx).apply {
@@ -172,11 +187,11 @@ fun CameraScreen(
                 cameraProviderFuture.addListener({
                     val cameraProvider = cameraProviderFuture.get()
 
-                     
+
                     val targetResolution =
                         android.util.Size(TARGET_RESOLUTION_WIDTH, TARGET_RESOLUTION_HEIGHT)
 
-                     
+
                     val preview = Preview.Builder()
                         .setTargetResolution(targetResolution)
                         .build()
@@ -184,7 +199,7 @@ fun CameraScreen(
                             it.surfaceProvider = previewView.surfaceProvider
                         }
 
-                     
+
                     val imageAnalyzer = ImageAnalysis.Builder()
                         .setTargetResolution(targetResolution)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -196,7 +211,7 @@ fun CameraScreen(
                                     isProcessing = { isPaused },
                                     detectionManager = detectionManager
                                 ) { result, bitmap ->
-                                     
+
                                     result?.let {
                                         it.bitmap = bitmap
                                         detectionResult = it
@@ -205,14 +220,14 @@ fun CameraScreen(
                             )
                         }
 
-                     
+
                     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
                     try {
-                         
+
                         cameraProvider.unbindAll()
 
-                         
+
                         val camera = cameraProvider.bindToLifecycle(
                             lifecycleOwner,
                             cameraSelector,
@@ -220,7 +235,7 @@ fun CameraScreen(
                             imageAnalyzer
                         )
 
-                         
+
                         camera.cameraControl.setZoomRatio(1.0f)
 
                     } catch (exc: Exception) {
@@ -249,7 +264,7 @@ fun CameraScreen(
 
         }
 
-         
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -260,7 +275,7 @@ fun CameraScreen(
             Button(
                 onClick = {
                     isPaused = !isPaused
-                     
+
                 },
 
                 colors = ButtonDefaults.buttonColors(
@@ -283,7 +298,7 @@ fun CameraScreen(
         }
     }
 
-     
+
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
@@ -293,6 +308,8 @@ fun CameraScreen(
                 Button(
                     onClick = {
                         showExitDialog = false
+                        val currentSessionId = violationViewModel.currentSessionId.value
+                        Log.d("CameraScreen", "Navigating to report with session ID: $currentSessionId")
                         navController.navigate(ReportScreen(sessionId = violationViewModel.currentSessionId.value))
                     }
                 ) {
@@ -376,11 +393,11 @@ private fun calculateScaleFactors(
         displayWidth = imageWidth * scaleFactor
     }
 
-     
+
     val scaleX = scaleFactor
     val scaleY = scaleFactor
 
-     
+
     val offsetX = (previewWidth - displayWidth) / 2
     val offsetY = (previewHeight - displayHeight) / 2
 
@@ -403,19 +420,21 @@ private fun DrawScope.drawDetectionResults(
     textMeasurer: androidx.compose.ui.text.TextMeasurer,
     textStyle: TextStyle
 ) {
-     
+
     result.personDetections.forEach { person ->
-        drawPerson(person, scaleX, scaleY, offsetX, offsetY, textMeasurer, textStyle)
+        drawPerson(person, scaleX, scaleY, offsetX, offsetY, textMeasurer, textStyle, result.detectionType)
     }
 
-     
-    result.helmetDetections.forEach { helmet ->
-        if (!helmet.isAssociated) {
-            drawHelmet(helmet, scaleX, scaleY, offsetX, offsetY, textMeasurer, textStyle)
+
+    if (result.detectionType == ViolationType.HELMET) {
+        result.helmetDetections.forEach { helmet ->
+            if (!helmet.isAssociated) {
+                drawHelmet(helmet, scaleX, scaleY, offsetX, offsetY, textMeasurer, textStyle)
+            }
         }
     }
 
-     
+
     drawStatistics(result, textMeasurer, textStyle)
 }
 
@@ -426,11 +445,17 @@ private fun DrawScope.drawPerson(
     offsetX: Float,
     offsetY: Float,
     textMeasurer: androidx.compose.ui.text.TextMeasurer,
-    textStyle: TextStyle
+    textStyle: TextStyle,
+    detectionType: ViolationType?
 ) {
-    val color = if (person.hasHelmet) Color.Green else Color.Red
 
-     
+    val color = when (detectionType) {
+        ViolationType.HELMET -> if (person.hasHelmet) Color.Green else Color.Red
+        ViolationType.HANDRAIL -> if (person.holdsHandrail) Color.Green else Color.Red
+        else -> Color.Yellow
+    }
+
+
     val bbox = person.boundingBox
     val scaledRect = Rect(
         left = bbox.left * scaleX + offsetX,
@@ -446,14 +471,13 @@ private fun DrawScope.drawPerson(
         style = Stroke(width = 3f)
     )
 
-     
+
     val labelText = "Person ${String.format("%.2f", person.confidence)}"
     val textLayoutResult = textMeasurer.measure(
         text = labelText,
         style = textStyle
     )
 
-     
     val textX = scaledRect.left.coerceAtLeast(5f)
     val textY = (scaledRect.top - textLayoutResult.size.height).coerceAtLeast(5f)
 
@@ -462,61 +486,100 @@ private fun DrawScope.drawPerson(
         topLeft = Offset(textX, textY)
     )
 
-     
-    if (!person.hasHelmet) {
-        val warningText = "NO HELMET!"
-        val warningLayoutResult = textMeasurer.measure(
-            text = warningText,
-            style = textStyle.copy(
-                color = Color.Red,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
 
-        drawText(
-            textLayoutResult = warningLayoutResult,
-            topLeft = Offset(
-                scaledRect.left + (scaledRect.width - warningLayoutResult.size.width) / 2,
-                scaledRect.top - warningLayoutResult.size.height - 5
-            ).coerceIn(
-                Offset(5f, 5f),
-                Offset(size.width - warningLayoutResult.size.width - 5, size.height - 5)
-            )
-        )
+    when (detectionType) {
+        ViolationType.HELMET -> {
+            if (!person.hasHelmet) {
+                val warningText = "NO HELMET!"
+                val warningLayoutResult = textMeasurer.measure(
+                    text = warningText,
+                    style = textStyle.copy(
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                drawText(
+                    textLayoutResult = warningLayoutResult,
+                    topLeft = Offset(
+                        scaledRect.left + (scaledRect.width - warningLayoutResult.size.width) / 2,
+                        scaledRect.top - warningLayoutResult.size.height - 5
+                    ).coerceIn(
+                        Offset(5f, 5f),
+                        Offset(size.width - warningLayoutResult.size.width - 5, size.height - 5)
+                    )
+                )
+            }
+        }
+        ViolationType.HANDRAIL -> {
+            if (!person.holdsHandrail) {
+                val warningText = "NOT HOLDING HANDRAIL!"
+                val warningLayoutResult = textMeasurer.measure(
+                    text = warningText,
+                    style = textStyle.copy(
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                drawText(
+                    textLayoutResult = warningLayoutResult,
+                    topLeft = Offset(
+                        scaledRect.left + (scaledRect.width - warningLayoutResult.size.width) / 2,
+                        scaledRect.top - warningLayoutResult.size.height - 5
+                    ).coerceIn(
+                        Offset(5f, 5f),
+                        Offset(size.width - warningLayoutResult.size.width - 5, size.height - 5)
+                    )
+                )
+            }
+        }
+        else -> {}
     }
 
-     
-    drawSkeleton(person, scaleX, scaleY, offsetX, offsetY)
 
-     
-    person.headBoundingBox?.let { headBox ->
-        val scaledHeadRect = Rect(
-            left = headBox.left * scaleX + offsetX,
-            top = headBox.top * scaleY + offsetY,
-            right = headBox.right * scaleX + offsetX,
-            bottom = headBox.bottom * scaleY + offsetY
-        )
+    drawSkeleton(person, scaleX, scaleY, offsetX, offsetY, detectionType)
 
-        drawRect(
-            color = Color.Magenta,
-            topLeft = Offset(scaledHeadRect.left, scaledHeadRect.top),
-            size = Size(scaledHeadRect.width, scaledHeadRect.height),
-            style = Stroke(width = 2f)
-        )
+
+    if (detectionType == ViolationType.HELMET) {
+        person.headBoundingBox?.let { headBox ->
+            val scaledHeadRect = Rect(
+                left = headBox.left * scaleX + offsetX,
+                top = headBox.top * scaleY + offsetY,
+                right = headBox.right * scaleX + offsetX,
+                bottom = headBox.bottom * scaleY + offsetY
+            )
+
+            drawRect(
+                color = Color.Magenta,
+                topLeft = Offset(scaledHeadRect.left, scaledHeadRect.top),
+                size = Size(scaledHeadRect.width, scaledHeadRect.height),
+                style = Stroke(width = 2f)
+            )
+        }
     }
 }
+
+
 
 private fun DrawScope.drawSkeleton(
     person: PersonDetection,
     scaleX: Float,
     scaleY: Float,
     offsetX: Float,
-    offsetY: Float
+    offsetY: Float,
+    detectionType: ViolationType?
 ) {
-    val lineColor = if (person.hasHelmet) Color.Green else Color(0f, 150f / 255f, 1f)
 
-     
+    val lineColor = when (detectionType) {
+        ViolationType.HELMET -> if (person.hasHelmet) Color.Green else Color(0f, 150f / 255f, 1f)
+        ViolationType.HANDRAIL -> if (person.holdsHandrail) Color.Green else Color(0f, 150f / 255f, 1f)
+        else -> Color(0f, 150f / 255f, 1f)
+    }
+
+
     KeypointType.POSE_PAIRS.forEach { (first, second) ->
         val firstPoint = person.keypoints.find { it.type == first }
         val secondPoint = person.keypoints.find { it.type == second }
@@ -524,7 +587,6 @@ private fun DrawScope.drawSkeleton(
         if (firstPoint != null && secondPoint != null &&
             firstPoint.confidence > 0.2f && secondPoint.confidence > 0.2f
         ) {
-
             val startX = firstPoint.position.x * scaleX + offsetX
             val startY = firstPoint.position.y * scaleY + offsetY
             val endX = secondPoint.position.x * scaleX + offsetX
@@ -539,10 +601,11 @@ private fun DrawScope.drawSkeleton(
         }
     }
 
-     
+
     person.keypoints.forEach { keypoint ->
         if (keypoint.confidence > 0.2f) {
-            val pointColor = if (keypoint.type in KeypointType.HEAD_KEYPOINTS) {
+
+            val pointColor = if (detectionType == ViolationType.HELMET && keypoint.type in KeypointType.HEAD_KEYPOINTS) {
                 if (person.hasHelmet) Color.Yellow else Color.Red
             } else {
                 lineColor
@@ -606,43 +669,100 @@ private fun DrawScope.drawStatistics(
     textMeasurer: androidx.compose.ui.text.TextMeasurer,
     textStyle: TextStyle
 ) {
-    val totalPeople = result.personDetections.size
-    val peopleWithHelmets = result.personDetections.count { it.hasHelmet }
-    val peopleWithoutHelmets = totalPeople - peopleWithHelmets
+    when (result.detectionType) {
+        ViolationType.HELMET -> {
 
-     
-    val statsText =
-        "Total: $totalPeople | With Helmets: $peopleWithHelmets | Without Helmets: $peopleWithoutHelmets"
-    val statsLayout = textMeasurer.measure(
-        text = statsText,
-        style = textStyle.copy(fontSize = 16.sp)
-    )
+            val totalPeople = result.personDetections.size
+            val peopleWithHelmets = result.personDetections.count { it.hasHelmet }
+            val peopleWithoutHelmets = totalPeople - peopleWithHelmets
 
-    drawText(
-        textLayoutResult = statsLayout,
-        topLeft = Offset(20f, 50f)
-    )
-
-     
-    if (peopleWithoutHelmets > 0) {
-        val warningText =
-            "WARNING! $peopleWithoutHelmets ${if (peopleWithoutHelmets == 1) "person" else "people"} without helmet!"
-        val warningLayout = textMeasurer.measure(
-            text = warningText,
-            style = textStyle.copy(
-                color = Color.Red,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+            val statsText = "Total: $totalPeople | With Helmets: $peopleWithHelmets | Without Helmets: $peopleWithoutHelmets"
+            val statsLayout = textMeasurer.measure(
+                text = statsText,
+                style = textStyle.copy(fontSize = 16.sp)
             )
-        )
 
-        drawText(
-            textLayoutResult = warningLayout,
-            topLeft = Offset(20f, 100f)
-        )
+            drawText(
+                textLayoutResult = statsLayout,
+                topLeft = Offset(20f, 50f)
+            )
+
+            if (peopleWithoutHelmets > 0) {
+                val warningText = "WARNING! $peopleWithoutHelmets ${if (peopleWithoutHelmets == 1) "person" else "people"} without helmet!"
+                val warningLayout = textMeasurer.measure(
+                    text = warningText,
+                    style = textStyle.copy(
+                        color = Color.Red,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                drawText(
+                    textLayoutResult = warningLayout,
+                    topLeft = Offset(20f, 100f)
+                )
+            }
+        }
+        ViolationType.HANDRAIL -> {
+
+            val handrailColor = when {
+                result.holdsHandrail -> Color.Green
+                result.unsafeScore > 0.9f -> Color.Red
+                else -> Color.Gray
+            }
+
+            val handrailText = when {
+                result.holdsHandrail -> "SAFE: Person holds the handrail"
+                result.unsafeScore > 0.9f -> "UNSAFE: Person does not hold the handrail!"
+                else -> "Monitoring stair safety..."
+            }
+
+            val handrailLayout = textMeasurer.measure(
+                text = handrailText,
+                style = textStyle.copy(
+                    color = handrailColor,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            drawText(
+                textLayoutResult = handrailLayout,
+                topLeft = Offset(20f, 50f)
+            )
+
+
+            val scoresText = "Safe: ${String.format("%.3f", result.handrailScore)}, Unsafe: ${String.format("%.3f", result.unsafeScore)}"
+            val scoresLayout = textMeasurer.measure(
+                text = scoresText,
+                style = textStyle.copy(fontSize = 16.sp)
+            )
+
+            drawText(
+                textLayoutResult = scoresLayout,
+                topLeft = Offset(20f, 100f)
+            )
+
+
+            val sequenceText = if (result.handrailScore == 0f && result.unsafeScore == 0f)
+                "Collecting pose data..." else "Model predictions active"
+            val sequenceLayout = textMeasurer.measure(
+                text = sequenceText,
+                style = textStyle.copy(fontSize = 14.sp, color = Color.Yellow)
+            )
+
+            drawText(
+                textLayoutResult = sequenceLayout,
+                topLeft = Offset(20f, 130f)
+            )
+        }
+        else -> {
+
+        }
     }
 
-     
+
     val timeText = "Processing: ${result.processingTimeMs}ms"
     val timeLayout = textMeasurer.measure(
         text = timeText,
@@ -666,9 +786,5 @@ private fun Offset.coerceIn(min: Offset, max: Offset): Offset {
  
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
-private fun DetectionResult.hasViolations(): Boolean {
-    return personDetections.any { !it.hasHelmet }
-}
-
 @Serializable
-object CameraScreen
+data class CameraScreen(val violation: String)

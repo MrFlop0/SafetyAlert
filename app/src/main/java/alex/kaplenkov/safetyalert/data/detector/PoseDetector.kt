@@ -13,6 +13,7 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 
@@ -28,6 +29,7 @@ class PoseDetector(context: Context, modelPath: String) {
 
     private val interpreter: Interpreter
     private val inputBuffer: ByteBuffer
+    private var lastPoseHeatmap: Array<Array<FloatArray>>? = null
 
     init {
         val options = Interpreter.Options()
@@ -65,7 +67,7 @@ class PoseDetector(context: Context, modelPath: String) {
          
         interpreter.run(inputBuffer, outputBuffer)
 
-         
+        lastPoseHeatmap = outputBuffer
         val detections = mutableListOf<PersonDetection>()
         val confidences = outputBuffer[0][4]  
 
@@ -265,6 +267,111 @@ class PoseDetector(context: Context, modelPath: String) {
         }
 
         return sortedDetections.filterIndexed { index, _ -> keep[index] }
+    }
+
+    fun getLastPoseHeatmap(): Array<Array<FloatArray>>? {
+        return lastPoseHeatmap
+    }
+
+    /**
+     * Этот метод преобразует выходные данные YOLOv11n_pose (1 x 56 x 8400)
+     * в формат, подходящий для модели stair-safety (64 x 48 x 17)
+     */
+    fun getLastPoseHeatmapFlattened(): FloatArray? {
+        if (lastPoseHeatmap == null) {
+            Log.e(TAG, "lastPoseHeatmap is null")
+            return null
+        }
+
+        try {
+            Log.d(TAG, "Converting pose heatmap with dimensions: ${lastPoseHeatmap!!.size} x ${lastPoseHeatmap!![0].size} x ${lastPoseHeatmap!![0][0].size}")
+
+            // Создаем искусственный heatmap с нужными размерами (64 x 48 x 17)
+            val heatmapHeight = 64
+            val heatmapWidth = 48
+            val numKeypoints = 17
+            val result = FloatArray(heatmapHeight * heatmapWidth * numKeypoints)
+
+            // Простая логика преобразования: экстракция данных ключевых точек из выхода YOLO
+            // Индексы 5-56 в выходе YOLO содержат информацию о ключевых точках (17 точек x 3 значения)
+            // В нашем случае у нас [1, 56, 8400] - значит, у нас данные для 8400 потенциальных объектов
+
+            // Находим объект с наивысшим confidence
+            val batch = 0
+            var bestObjectIndex = -1
+            var maxConfidence = 0.0f
+
+            // YOLO output format: [batch, 4+1+51, num_objects]
+            // Индекс 4 - это confidence score для объекта
+            for (i in 0 until lastPoseHeatmap!![batch][0].size) {
+                val confidence = lastPoseHeatmap!![batch][4][i]
+                if (confidence > maxConfidence) {
+                    maxConfidence = confidence
+                    bestObjectIndex = i
+                }
+            }
+
+            Log.d(TAG, "Best object index: $bestObjectIndex with confidence: $maxConfidence")
+
+            if (bestObjectIndex >= 0) {
+                // Извлекаем данные ключевых точек для лучшего объекта
+                // Преобразуем в формат (64 x 48 x 17)
+                var resultIndex = 0
+
+                // Создаем простую карту активации на основе ключевых точек
+                for (h in 0 until heatmapHeight) {
+                    for (w in 0 until heatmapWidth) {
+                        for (k in 0 until numKeypoints) {
+                            // База - индекс начала данных ключевых точек (после bbox+confidence)
+                            val baseIdx = 5 + k * 3
+
+                            // Координаты ключевой точки (x, y) и её confidence
+                            val kpX = lastPoseHeatmap!![batch][baseIdx][bestObjectIndex]     // x
+                            val kpY = lastPoseHeatmap!![batch][baseIdx + 1][bestObjectIndex] // y
+                            val kpConf = lastPoseHeatmap!![batch][baseIdx + 2][bestObjectIndex] // confidence
+
+                            // Нормализуем координаты к размеру heatmap
+                            val normX = kpX * heatmapWidth
+                            val normY = kpY * heatmapHeight
+
+                            // Создаем гауссово распределение вокруг точки
+                            val sigma = 1.0f
+                            val dx = w - normX
+                            val dy = h - normY
+                            val distance = dx * dx + dy * dy
+
+                            // Значение в текущей точке heatmap
+                            val value = kpConf * exp((-distance / (2 * sigma * sigma)).toDouble()).toFloat()
+
+                            result[resultIndex++] = value
+                        }
+                    }
+                }
+
+                // Логируем статистику результата
+                var sum = 0.0f
+                var max = Float.MIN_VALUE
+                var min = Float.MAX_VALUE
+                for (value in result) {
+                    sum += value
+                    max = max.coerceAtLeast(value)
+                    min = min.coerceAtMost(value)
+                }
+
+                Log.d(TAG, "Created heatmap with stats - Size: ${result.size}, Min: $min, Max: $max, Mean: ${sum / result.size}")
+
+                return result
+            } else {
+                Log.w(TAG, "No valid objects detected")
+            }
+
+            Log.d(TAG, "Returning empty heatmap")
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error preparing heatmap for stair safety: ${e.message}")
+            e.printStackTrace()
+            return null
+        }
     }
 
     private fun calculateIoU(boxA: RectF, boxB: RectF): Float {
