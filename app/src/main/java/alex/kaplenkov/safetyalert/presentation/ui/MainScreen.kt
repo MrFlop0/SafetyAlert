@@ -8,7 +8,6 @@ import alex.kaplenkov.safetyalert.ui.theme.PrimaryGrey
 import alex.kaplenkov.safetyalert.ui.theme.Red
 import alex.kaplenkov.safetyalert.ui.theme.SecondaryBlue
 import android.Manifest
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -187,8 +186,6 @@ private fun StartButton(
         )
     }
 }
-
-private data class ViolationType(val text: String, @DrawableRes val iconRes: Int)
 
 @Serializable
 object MainScreen

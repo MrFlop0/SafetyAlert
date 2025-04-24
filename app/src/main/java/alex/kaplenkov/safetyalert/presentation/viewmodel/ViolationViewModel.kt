@@ -62,13 +62,11 @@ class ViolationViewModel @Inject constructor(
         if (!_hasActiveSession.value) {
             _currentSessionId.value = generateSessionId()
             _hasActiveSession.value = true
-            Log.d("SessionManager", "New session started: ${_currentSessionId.value}")
         }
     }
 
     fun endSession() {
         _hasActiveSession.value = false
-        Log.d("SessionManager", "Session ended: ${_currentSessionId.value}")
     }
 
     fun getViolationById(id: Long): Flow<Violation?> {
@@ -76,8 +74,7 @@ class ViolationViewModel @Inject constructor(
     }
 
     private fun generateSessionId(): String {
-        val a = UUID.randomUUID().toString()
-        return a
+        return UUID.randomUUID().toString()
     }
 
     fun deleteViolation(violationId: Long) {

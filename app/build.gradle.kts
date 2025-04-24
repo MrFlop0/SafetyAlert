@@ -80,8 +80,8 @@ dependencies {
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
 
-    testImplementation(libs.mockito.core.v520) // or newer version
-    testImplementation(libs.mockito.kotlin) // already in your dependencies
+    testImplementation(libs.mockito.core.v520)
+    testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test.v180)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -89,4 +89,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(libs.androidx.core.testing)
 }
