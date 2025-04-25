@@ -67,11 +67,6 @@ class DetectionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDetection(detectionId: String): Boolean {
-         
-         
-         
-         
-         
         return false
     }
 }

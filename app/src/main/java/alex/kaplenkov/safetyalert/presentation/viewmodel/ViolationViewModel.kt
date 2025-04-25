@@ -3,7 +3,6 @@ package alex.kaplenkov.safetyalert.presentation.viewmodel
 import alex.kaplenkov.safetyalert.data.repository.LocalViolationRepository
 import alex.kaplenkov.safetyalert.domain.model.Violation
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -82,6 +84,50 @@ class ViolationViewModel @Inject constructor(
             localViolationRepository.deleteViolation(violationId)
         }
     }
+
+    val violationsByType: StateFlow<Map<String, Int>> = allViolations
+        .map { violations ->
+            violations.groupingBy { it.type }.eachCount()
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyMap()
+        )
+
+    val violationsByWeek: StateFlow<Map<String, Int>> = allViolations
+        .map { violations ->
+            violations
+                .groupBy { violation ->
+                    try {
+                        val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                            .parse(violation.timestamp)
+                        val calendar = Calendar.getInstance()
+                        calendar.time = date!!
+                        val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
+                        val year = calendar.get(Calendar.YEAR)
+                        "Week $weekOfYear, $year"
+                    } catch (e: Exception) {
+                        "Unknown"
+                    }
+                }
+                .mapValues { it.value.size }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyMap()
+        )
+
+    val mostCommonViolationType: StateFlow<String?> = violationsByType
+        .map { typeMap ->
+            typeMap.entries.maxByOrNull { it.value }?.key
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
 
     fun getViolationsForSession(sessionId: String): Flow<List<Violation>> {
         return if (sessionId.isEmpty()) {

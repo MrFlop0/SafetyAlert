@@ -3,8 +3,6 @@ package alex.kaplenkov.safetyalert.presentation.ui
 import alex.kaplenkov.safetyalert.presentation.viewmodel.ViolationViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,8 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,8 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.serialization.Serializable
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +38,9 @@ fun AllViolationsScreen(
     viewModel: ViolationViewModel = hiltViewModel()
 ) {
     val allViolations by viewModel.allViolations.collectAsState()
+    val violationsByType by viewModel.violationsByType.collectAsState()
+    val violationsByWeek by viewModel.violationsByWeek.collectAsState()
+    val mostCommonViolationType by viewModel.mostCommonViolationType.collectAsState()
 
     Scaffold(
         topBar = {
@@ -57,48 +54,40 @@ fun AllViolationsScreen(
             )
         }
     ) { paddingValues ->
-        Box(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Статистика нарушений",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Всего обнаружено нарушений: ${allViolations.size}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+            item {
+                // Statistics Section
+                StatisticsSection(
+                    violations = allViolations,
+                    violationsByType = violationsByType,
+                    violationsByWeek = violationsByWeek,
+                    mostCommonViolationType = mostCommonViolationType
+                )
 
-                        val lastViolationDate = allViolations.maxByOrNull { it.timestamp }?.timestamp
-                            ?.let { formatTimestamp(it) } ?: "Н/Д"
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
 
-                        Text(
-                            text = "Последнее нарушение: $lastViolationDate",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
+            item {
+                Text(
+                    text = "Список всех нарушений",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (allViolations.isEmpty()) {
+            if (allViolations.isEmpty()) {
+                item {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -107,47 +96,24 @@ fun AllViolationsScreen(
                             color = Color.Gray
                         )
                     }
-                } else {
-                    Text(
-                        text = "Список всех нарушений:",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    Divider()
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    ) {
-                        items(allViolations) { violation ->
-                            ViolationCard(
-                                violation = violation,
-                                onDeleteClick = {
-                                    viewModel.deleteViolation(violation.id)
-                                },
-                                onCardClick = {
-                                    navController.navigate(ViolationDetailScreen(violation.id))
-                                }
-                            )
+                }
+            } else {
+                items(allViolations) { violation ->
+                    ViolationCard(
+                        violation = violation,
+                        onDeleteClick = {
+                            viewModel.deleteViolation(violation.id)
+                        },
+                        onCardClick = {
+                            navController.navigate(ViolationDetailScreen(violation.id))
                         }
-                    }
+                    )
                 }
             }
         }
     }
 }
 
-private fun formatTimestamp(timestamp: String): String {
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val date = inputFormat.parse(timestamp)
-        val outputFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-        outputFormat.format(date!!)
-    } catch (e: Exception) {
-        timestamp
-    }
-}
 
 @Serializable
 object AllViolationsScreen

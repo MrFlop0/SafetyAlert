@@ -17,6 +17,17 @@ fun formatDate(date: Date, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
     return formatter.format(date)
 }
 
+fun formatTimestamp(timestamp: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = inputFormat.parse(timestamp)
+        val outputFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+        outputFormat.format(date!!)
+    } catch (e: Exception) {
+        timestamp
+    }
+}
+
 /**
  * Converts a duration in milliseconds to a human-readable string.
  *

@@ -59,6 +59,7 @@ dependencies {
     //hilt
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.core.ktx)
     kapt(libs.hilt.compiler)
 
     //room
@@ -67,6 +68,11 @@ dependencies {
     kapt(libs.room.compiler)
 
     implementation(libs.coil.compose)
+
+    //stats
+    implementation("com.patrykandpatrick.vico:compose:1.6.4")
+    implementation("com.patrykandpatrick.vico:compose-m3:1.6.4")
+    implementation("com.patrykandpatrick.vico:core:1.6.4")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -90,4 +96,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(libs.androidx.core.testing)
+    testImplementation(libs.robolectric)
 }
