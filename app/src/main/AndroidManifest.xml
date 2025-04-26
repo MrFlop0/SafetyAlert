@@ -4,6 +4,8 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".SafetyApp"
@@ -16,6 +18,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SafetyAlert"
         tools:targetApi="31">
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

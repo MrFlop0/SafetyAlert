@@ -62,7 +62,6 @@ fun AllViolationsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                // Statistics Section
                 StatisticsSection(
                     violations = allViolations,
                     violationsByType = violationsByType,

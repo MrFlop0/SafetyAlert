@@ -9,16 +9,21 @@ plugins {
 
 android {
     namespace = "alex.kaplenkov.safetyalert"
-    compileSdk = 34
+    compileSdk = 35
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "alex.kaplenkov.safetyalert"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_TOKEN", "\"${project.findProperty("API_TOKEN") ?: ""}\"")
     }
 
     buildTypes {
@@ -60,7 +65,11 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.core.ktx)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
     kapt(libs.hilt.compiler)
+    kapt(libs.androidx.hilt.compiler) // for worker
 
     //room
     implementation(libs.room.runtime)
@@ -68,6 +77,10 @@ dependencies {
     kapt(libs.room.compiler)
 
     implementation(libs.coil.compose)
+
+    //retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 
     //stats
     implementation("com.patrykandpatrick.vico:compose:1.6.4")

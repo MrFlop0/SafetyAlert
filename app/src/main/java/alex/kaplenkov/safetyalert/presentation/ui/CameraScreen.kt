@@ -131,7 +131,7 @@ fun CameraScreen(
                                         val violation = Violation(
                                             type = "Safety Helmet Violation",
                                             confidence = person.confidence,
-                                            description = "Person detected without proper head protection",
+                                            description = "Человек без защитного шлема",
                                             location = "Worksite area",
                                             sessionId = violationViewModel.currentSessionId.value
                                         )
@@ -143,7 +143,7 @@ fun CameraScreen(
                                     val violation = Violation(
                                         type = "Stair Safety Violation",
                                         confidence = result.unsafeScore,
-                                        description = "Person not holding handrail on stairs",
+                                        description = "Человек не держится за перила",
                                         location = "Staircase area",
                                         sessionId = violationViewModel.currentSessionId.value
                                     )

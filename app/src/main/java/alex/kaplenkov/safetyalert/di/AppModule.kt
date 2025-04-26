@@ -1,13 +1,16 @@
 package alex.kaplenkov.safetyalert.di
 
+import alex.kaplenkov.safetyalert.data.api.ApiService
 import alex.kaplenkov.safetyalert.data.datasource.local.ReportLocalDataSource
 import alex.kaplenkov.safetyalert.data.db.SafetyAlertDatabase
+import alex.kaplenkov.safetyalert.data.db.SyncStatusDao
+import alex.kaplenkov.safetyalert.data.db.ViolationDao
 import alex.kaplenkov.safetyalert.data.repository.DetectionRepositoryImpl
 import alex.kaplenkov.safetyalert.data.repository.LocalViolationRepository
 import alex.kaplenkov.safetyalert.data.repository.ReportRepositoryImpl
+import alex.kaplenkov.safetyalert.data.repository.SyncRepository
 import alex.kaplenkov.safetyalert.domain.repository.DetectionRepository
 import alex.kaplenkov.safetyalert.domain.repository.ReportRepository
-import alex.kaplenkov.safetyalert.presentation.viewmodel.ViolationViewModel
 import android.content.Context
 import dagger.Module
 import dagger.Provides
@@ -52,9 +55,26 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLocalViolationRepository(@ApplicationContext context: Context): LocalViolationRepository {
-        val database = provideDatabase(context)
-        return LocalViolationRepository(provideViolationDao(database), context)
+    fun provideSyncStatusDao(database: SafetyAlertDatabase) = database.syncStatusDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncRepository(
+        violationDao: ViolationDao,
+        syncStatusDao: SyncStatusDao,
+        apiService: ApiService
+    ): SyncRepository {
+        return SyncRepository(violationDao, syncStatusDao, apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalViolationRepository(
+        violationDao: ViolationDao,
+        syncRepository: SyncRepository,
+        @ApplicationContext context: Context
+    ): LocalViolationRepository {
+        return LocalViolationRepository(violationDao, syncRepository, context)
     }
 
 }

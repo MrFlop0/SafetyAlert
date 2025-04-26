@@ -265,17 +265,7 @@ fun ViolationCard(
                 color = Color.Gray
             )
 
-            if (violation.location != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Location: ${violation.location}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-            }
-
             Spacer(modifier = Modifier.height(12.dp))
-
 
             violation.description?.let {
                 Text(
@@ -300,7 +290,6 @@ fun ViolationCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

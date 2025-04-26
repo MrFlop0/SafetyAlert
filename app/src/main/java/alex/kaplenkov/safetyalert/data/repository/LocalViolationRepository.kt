@@ -1,6 +1,7 @@
 package alex.kaplenkov.safetyalert.data.repository
 
 import alex.kaplenkov.safetyalert.data.db.ViolationDao
+import alex.kaplenkov.safetyalert.data.db.entity.SyncStatus
 import alex.kaplenkov.safetyalert.data.db.entity.ViolationEntity
 import alex.kaplenkov.safetyalert.domain.model.Violation
 import android.content.Context
@@ -21,6 +22,7 @@ import java.util.UUID
 
 class LocalViolationRepository(
     private val violationDao: ViolationDao,
+    private val syncRepository: SyncRepository,
     private val context: Context
 ) {
 
@@ -47,7 +49,9 @@ class LocalViolationRepository(
                 sessionId = violation.sessionId
             )
 
-            violationDao.insertViolation(entity)
+            val violationId = violationDao.insertViolation(entity)
+            syncRepository.registerViolationForSync(violationId)
+            violationId
         }
     }
 
@@ -59,6 +63,7 @@ class LocalViolationRepository(
 
                 File(it.imagePath).delete()
 
+                syncRepository.deleteSyncStatusForViolation(violationId)
                 violationDao.deleteViolation(violationId)
             }
         }
@@ -69,6 +74,14 @@ class LocalViolationRepository(
             val entity = violationDao.getViolationById(id)
             emit(entity?.toViolation())
         }.flowOn(Dispatchers.IO)
+    }
+
+    fun getSyncStatusForViolation(violationId: Long): Flow<SyncStatus?> {
+        return syncRepository.getSyncStatusForViolation(violationId)
+    }
+
+    suspend fun forceSyncViolation(violationId: Long) {
+        syncRepository.syncViolation(violationId)
     }
 
 

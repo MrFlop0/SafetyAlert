@@ -60,7 +60,6 @@ class ImageAnalyzer(
 
         val nv21 = ByteArray(ySize + uSize + vSize)
 
-        // U and V are swapped
         yBuffer.get(nv21, 0, ySize)
         vBuffer.get(nv21, ySize, vSize)
         uBuffer.get(nv21, ySize + vSize, uSize)
@@ -77,7 +76,6 @@ class ImageAnalyzer(
         val imageBytes = out.toByteArray()
         val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
-        // Rotate the bitmap based on the image rotation
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
         return if (rotationDegrees != 0) {
             val matrix = Matrix()

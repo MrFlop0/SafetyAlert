@@ -75,7 +75,10 @@ fun StatisticsSection(
                     .fillMaxWidth()
                     .height(300.dp)
                     .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
             ) {
                 PieChartWithLegend(
                     data = violationsByType,
@@ -102,7 +105,10 @@ fun StatisticsSection(
                     .fillMaxWidth()
                     .height(300.dp)
                     .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
             ) {
                 BarChartWithLabels(
                     data = violationsByWeek,

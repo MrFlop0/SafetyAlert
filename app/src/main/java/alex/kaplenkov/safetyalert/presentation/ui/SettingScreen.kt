@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.serialization.Serializable
@@ -73,41 +72,41 @@ fun SettingScreen(controller: NavController) {
                 }
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Дополнительные настройки",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    HorizontalDivider()
-
-                    Text(
-                        text = "Эта секция находится в разработке...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp)
-                    )
-                }
-            }
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+//            ) {
+//                Column(
+//                    modifier = Modifier.padding(16.dp),
+//                    verticalArrangement = Arrangement.spacedBy(12.dp)
+//                ) {
+//                    Text(
+//                        text = "Дополнительные настройки",
+//                        style = MaterialTheme.typography.titleLarge,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//
+//                    HorizontalDivider()
+//
+//                    Text(
+//                        text = "Эта секция находится в разработке...",
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        textAlign = TextAlign.Center,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(vertical = 16.dp)
+//                    )
+//                }
+//            }
         }
 
-        Text(
-            text = "Пользователь: in progress",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
-        )
+//        Text(
+//            text = "Пользователь: in progress",
+//            style = MaterialTheme.typography.bodySmall,
+//            modifier = Modifier
+//                .align(Alignment.BottomCenter)
+//                .padding(bottom = 16.dp)
+//        )
     }
 }
 
