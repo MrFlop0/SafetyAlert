@@ -1,7 +1,7 @@
 package alex.kaplenkov.safetyalert.presentation.ui
 
-import alex.kaplenkov.safetyalert.data.DetectionManager
 import alex.kaplenkov.safetyalert.data.ImageAnalyzer
+import alex.kaplenkov.safetyalert.data.detector.DetectionManagerImpl
 import alex.kaplenkov.safetyalert.data.model.DetectionResult
 import alex.kaplenkov.safetyalert.data.model.HelmetDetection
 import alex.kaplenkov.safetyalert.data.model.KeypointType
@@ -94,7 +94,7 @@ fun CameraScreen(
     var lastSaveTimestamp by remember { mutableLongStateOf(0L) }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    val detectionManager = remember { DetectionManager(context) }
+    val detectionManager = remember { DetectionManagerImpl(context) }
 
     LaunchedEffect(detectionType) {
         detectionManager.setDetectionType(detectionType)

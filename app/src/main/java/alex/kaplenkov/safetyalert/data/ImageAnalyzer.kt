@@ -1,6 +1,7 @@
 package alex.kaplenkov.safetyalert.data
 
 import alex.kaplenkov.safetyalert.data.model.DetectionResult
+import alex.kaplenkov.safetyalert.domain.detector.DetectionManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.util.Log

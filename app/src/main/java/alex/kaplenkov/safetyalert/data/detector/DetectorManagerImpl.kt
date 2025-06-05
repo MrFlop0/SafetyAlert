@@ -1,11 +1,10 @@
-package alex.kaplenkov.safetyalert.data
+package alex.kaplenkov.safetyalert.data.detector
 
-import alex.kaplenkov.safetyalert.data.detector.HelmetDetector
-import alex.kaplenkov.safetyalert.data.detector.PoseDetector
-import alex.kaplenkov.safetyalert.data.detector.StairSafetyDetector
 import alex.kaplenkov.safetyalert.data.model.DetectionResult
 import alex.kaplenkov.safetyalert.data.model.HelmetDetection
 import alex.kaplenkov.safetyalert.data.model.ViolationType
+import alex.kaplenkov.safetyalert.domain.detector.DetectionManager
+import alex.kaplenkov.safetyalert.domain.detector.DetectorWithHeatmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.RectF
@@ -13,31 +12,31 @@ import android.util.Log
 import kotlin.math.max
 import kotlin.math.min
 
-class DetectionManager(context: Context) {
+class DetectionManagerImpl(context: Context) : DetectionManager {
 
     companion object {
         private const val TAG = "DetectionManager"
-        private const val POSE_MODEL_PATH = "yolov11n_pose.tflite"
-        private const val HELMET_MODEL_PATH = "helmet_detection.tflite"
-        private const val STAIR_SAFETY_MODEL_PATH = "stair_safety_detection.tflite"
         private const val IOU_THRESHOLD = 0.25f
-        private const val SAFETY_THRESHOLD = 0.9f
     }
 
-    private val poseDetector: PoseDetector = PoseDetector(context, POSE_MODEL_PATH)
-    private val helmetDetector: HelmetDetector = HelmetDetector(context, HELMET_MODEL_PATH)
-    private val stairSafetyDetector: StairSafetyDetector = StairSafetyDetector(context, STAIR_SAFETY_MODEL_PATH)
+    private val detectorFactory = DetectorFactoryImpl(context)
+
+    private val poseDetector = detectorFactory.createPoseDetector() as PoseDetectorImpl
+
+    private val helmetDetector = detectorFactory.createHelmetDetector() as HelmetDetectorImpl
+
+    private val stairSafetyDetector = detectorFactory.createStairSafetyDetector() as StairSafetyDetectorImpl
 
     private var activeDetectionType: ViolationType = ViolationType.HELMET
 
-    fun setDetectionType(type: ViolationType) {
+    override fun setDetectionType(type: ViolationType) {
         activeDetectionType = type
         if (type == ViolationType.HANDRAIL) {
             stairSafetyDetector.clear()
         }
     }
 
-    fun runDetection(bitmap: Bitmap): DetectionResult {
+    override fun runDetection(bitmap: Bitmap): DetectionResult {
         return when (activeDetectionType) {
             ViolationType.HELMET -> detectHelmets(bitmap)
             ViolationType.HANDRAIL -> detectHandrailSafety(bitmap)
@@ -48,14 +47,10 @@ class DetectionManager(context: Context) {
     private fun detectHelmets(bitmap: Bitmap): DetectionResult {
         val startTime = System.currentTimeMillis()
 
-
         val personDetections = poseDetector.detect(bitmap)
-
-
         val helmetDetections = helmetDetector.detect(bitmap).toMutableList()
 
         Log.d(TAG, "Found ${personDetections.size} people and ${helmetDetections.size} helmets")
-
 
         val updatedPersonDetections = personDetections.map { person ->
             val headBbox = person.headBoundingBox
@@ -87,34 +82,27 @@ class DetectionManager(context: Context) {
     private fun detectHandrailSafety(bitmap: Bitmap): DetectionResult {
         val startTime = System.currentTimeMillis()
 
-
         val personDetections = poseDetector.detect(bitmap)
-
-
-        val poseHeatmap = poseDetector.getLastPoseHeatmapFlattened()
+        val poseHeatmap = (poseDetector as? DetectorWithHeatmap)?.getLastHeatmapFlattened()
 
         var holdsHandrail = false
         var handrailScore = 0.0f
         var unsafeScore = 0.0f
 
-
         if (poseHeatmap != null) {
             stairSafetyDetector.addPoseHeatmap(poseHeatmap)
 
-
             if (stairSafetyDetector.hasSufficientData()) {
-                val (safeScore, unsafe) = stairSafetyDetector.detect()
+                val (safeScore, unsafe) = stairSafetyDetector.detect(bitmap)
                 handrailScore = safeScore
                 unsafeScore = unsafe
 
-
                 val status = stairSafetyDetector.isHandrailSafe(Pair(safeScore, unsafe))
-                holdsHandrail = status == StairSafetyDetector.HandrailStatus.SAFE
+                holdsHandrail = status == StairSafetyDetectorImpl.HandrailStatus.SAFE
 
                 Log.d(TAG, "Stair safety status: $status (safe: $safeScore, unsafe: $unsafe)")
             }
         }
-
 
         val updatedPersonDetections = personDetections.map { person ->
             person.copy(holdsHandrail = holdsHandrail)
@@ -176,7 +164,7 @@ class DetectionManager(context: Context) {
         return if (union <= 0) 0f else intersection / union
     }
 
-    fun close() {
+    override fun close() {
         poseDetector.close()
         helmetDetector.close()
         stairSafetyDetector.close()

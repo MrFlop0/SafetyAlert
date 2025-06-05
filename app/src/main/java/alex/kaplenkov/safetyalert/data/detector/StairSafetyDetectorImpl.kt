@@ -1,14 +1,21 @@
 package alex.kaplenkov.safetyalert.data.detector
 
+import alex.kaplenkov.safetyalert.data.detector.base.BaseTensorFlowDetector
+import alex.kaplenkov.safetyalert.domain.detector.SequentialDetector
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.flex.FlexDelegate
-import org.tensorflow.lite.support.common.FileUtil
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class StairSafetyDetector(context: Context, modelPath: String) {
+class StairSafetyDetectorImpl(
+    context: Context,
+    modelPath: String
+) : BaseTensorFlowDetector<Pair<Float, Float>>(context, modelPath, 0),
+    SequentialDetector<Pair<Float, Float>> {
+
     companion object {
         private const val TAG = "StairSafetyDetector"
         private const val SEQUENCE_LENGTH = 6
@@ -18,12 +25,10 @@ class StairSafetyDetector(context: Context, modelPath: String) {
         private const val SAFETY_THRESHOLD = 0.8f
     }
 
-    private val interpreter: Interpreter
     private var poseHeatmapSequence = mutableListOf<FloatArray>()
 
-    init {
+    override fun createInterpreterOptions(): Interpreter.Options {
         val options = Interpreter.Options()
-
         try {
             val delegate = FlexDelegate()
             options.addDelegate(delegate)
@@ -31,11 +36,24 @@ class StairSafetyDetector(context: Context, modelPath: String) {
         } catch (e: Exception) {
             Log.e(TAG, "Could not create Flex delegate", e)
         }
+        return options
+    }
 
-        interpreter = Interpreter(FileUtil.loadMappedFile(context, modelPath), options)
-        interpreter.allocateTensors()
+    override fun createInputBuffer(): ByteBuffer {
+        return ByteBuffer.allocateDirect(0)
+    }
 
-        Log.d(TAG, "Stair safety model loaded")
+    override fun detect(bitmap: Bitmap): Pair<Float, Float> {
+        return if (hasSufficientData()) {
+            runInference()
+        } else {
+            Pair(0.0f, 0.0f)
+        }
+    }
+
+    override fun addFrame(bitmap: Bitmap) {
+        // Этот метод будет вызываться извне с heatmap данными
+        // Для совместимости с интерфейсом
     }
 
     fun addPoseHeatmap(heatmap: FloatArray) {
@@ -52,8 +70,27 @@ class StairSafetyDetector(context: Context, modelPath: String) {
         }
     }
 
-    fun hasSufficientData(): Boolean {
+    override fun hasSufficientData(): Boolean {
         return poseHeatmapSequence.size == SEQUENCE_LENGTH
+    }
+
+    private fun runInference(): Pair<Float, Float> {
+        try {
+            val inputBuffer = prepareStairSafetyInput()
+            val outputBuffer = Array(1) { FloatArray(2) }
+
+            interpreter.run(inputBuffer, outputBuffer)
+
+            val safeScore = outputBuffer[0][0]
+            val unsafeScore = outputBuffer[0][1]
+
+            Log.d(TAG, "Stair safety prediction: safe=$safeScore, unsafe=$unsafeScore")
+
+            return Pair(safeScore, unsafeScore)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error running model inference", e)
+            return Pair(0.0f, 0.0f)
+        }
     }
 
     private fun prepareStairSafetyInput(): ByteBuffer {
@@ -75,30 +112,6 @@ class StairSafetyDetector(context: Context, modelPath: String) {
         return buffer
     }
 
-    fun detect(): Pair<Float, Float> {
-        if (!hasSufficientData()) {
-            return Pair(0.0f, 0.0f)
-        }
-
-        try {
-            val inputBuffer = prepareStairSafetyInput()
-            val outputBuffer = Array(1) { FloatArray(2) }
-
-            interpreter.run(inputBuffer, outputBuffer)
-
-            val safeScore = outputBuffer[0][0]
-            val unsafeScore = outputBuffer[0][1]
-
-            Log.d(TAG, "Stair safety prediction: safe=$safeScore, unsafe=$unsafeScore")
-
-            return Pair(safeScore, unsafeScore)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error running model inference", e)
-            e.printStackTrace()
-            return Pair(0.0f, 0.0f)
-        }
-    }
-
     fun isHandrailSafe(safeUnsafeScores: Pair<Float, Float>): HandrailStatus {
         val (safeScore, unsafeScore) = safeUnsafeScores
         Log.d(TAG, "Checking safety with scores - Safe: $safeScore, Unsafe: $unsafeScore, Threshold: $SAFETY_THRESHOLD")
@@ -111,12 +124,8 @@ class StairSafetyDetector(context: Context, modelPath: String) {
         }
     }
 
-    fun clear() {
+    override fun clear() {
         poseHeatmapSequence.clear()
-    }
-
-    fun close() {
-        interpreter.close()
     }
 
     enum class HandrailStatus {
