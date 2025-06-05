@@ -5,12 +5,8 @@ import alex.kaplenkov.safetyalert.data.datasource.local.ReportLocalDataSource
 import alex.kaplenkov.safetyalert.data.db.SafetyAlertDatabase
 import alex.kaplenkov.safetyalert.data.db.SyncStatusDao
 import alex.kaplenkov.safetyalert.data.db.ViolationDao
-import alex.kaplenkov.safetyalert.data.repository.DetectionRepositoryImpl
 import alex.kaplenkov.safetyalert.data.repository.LocalViolationRepository
-import alex.kaplenkov.safetyalert.data.repository.ReportRepositoryImpl
 import alex.kaplenkov.safetyalert.data.repository.SyncRepository
-import alex.kaplenkov.safetyalert.domain.repository.DetectionRepository
-import alex.kaplenkov.safetyalert.domain.repository.ReportRepository
 import alex.kaplenkov.safetyalert.domain.repository.ViolationRepository
 import android.content.Context
 import dagger.Module
@@ -28,22 +24,6 @@ object AppModule {
     @Singleton
     fun provideReportLocalDataSource(@ApplicationContext context: Context): ReportLocalDataSource {
         return ReportLocalDataSource(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideReportRepository(
-        localDataSource: ReportLocalDataSource
-    ): ReportRepository {
-        return ReportRepositoryImpl(localDataSource)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDetectionRepository(
-        localDataSource: ReportLocalDataSource
-    ): DetectionRepository {
-        return DetectionRepositoryImpl(localDataSource)
     }
 
     @Provides
