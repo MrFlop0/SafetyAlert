@@ -22,7 +22,7 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            //Log.d("SyncAAA", "SyncWorker started")
+            Log.d("SyncAAA", "SyncWorker started")
 
             var isConnected = false
             networkMonitor.networkStatus.collect {

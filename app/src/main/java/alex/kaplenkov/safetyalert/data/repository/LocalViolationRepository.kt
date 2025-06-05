@@ -4,6 +4,7 @@ import alex.kaplenkov.safetyalert.data.db.ViolationDao
 import alex.kaplenkov.safetyalert.data.db.entity.SyncStatus
 import alex.kaplenkov.safetyalert.data.db.entity.ViolationEntity
 import alex.kaplenkov.safetyalert.domain.model.Violation
+import alex.kaplenkov.safetyalert.domain.repository.ViolationRepository
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -24,9 +25,9 @@ class LocalViolationRepository(
     private val violationDao: ViolationDao,
     private val syncRepository: SyncRepository,
     private val context: Context
-) {
+): ViolationRepository {
 
-    fun getAllViolations(): Flow<List<Violation>> {
+    override fun getAllViolations(): Flow<List<Violation>> {
         return violationDao.getAllViolations()
             .map { entities ->
                 entities.map { it.toViolation() }
@@ -35,10 +36,9 @@ class LocalViolationRepository(
     }
 
 
-    suspend fun saveViolation(violation: Violation, bitmap: Bitmap): Long {
+    override suspend fun saveViolation(violation: Violation, bitmap: Bitmap): Long {
         return withContext(Dispatchers.IO) {
             val imagePath = saveImageToStorage(bitmap)
-
 
             val entity = ViolationEntity(
                 type = violation.type,
@@ -56,7 +56,7 @@ class LocalViolationRepository(
     }
 
 
-    suspend fun deleteViolation(violationId: Long) {
+    override suspend fun deleteViolation(violationId: Long) {
         withContext(Dispatchers.IO) {
             val violation = violationDao.getViolationById(violationId)
             violation?.let {
@@ -69,7 +69,7 @@ class LocalViolationRepository(
         }
     }
 
-    fun getViolationById(id: Long): Flow<Violation?> {
+    override fun getViolationById(id: Long): Flow<Violation?> {
         return flow {
             val entity = violationDao.getViolationById(id)
             emit(entity?.toViolation())
@@ -80,7 +80,7 @@ class LocalViolationRepository(
         return syncRepository.getSyncStatusForViolation(violationId)
     }
 
-    suspend fun forceSyncViolation(violationId: Long) {
+    override suspend fun forceSyncViolation(violationId: Long) {
         syncRepository.syncViolation(violationId)
     }
 

@@ -69,7 +69,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     kapt(libs.hilt.compiler)
-    kapt(libs.androidx.hilt.compiler) // for worker
+    kapt(libs.androidx.hilt.compiler)
 
     //room
     implementation(libs.room.runtime)

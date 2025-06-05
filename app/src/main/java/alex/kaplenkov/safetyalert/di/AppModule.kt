@@ -11,6 +11,7 @@ import alex.kaplenkov.safetyalert.data.repository.ReportRepositoryImpl
 import alex.kaplenkov.safetyalert.data.repository.SyncRepository
 import alex.kaplenkov.safetyalert.domain.repository.DetectionRepository
 import alex.kaplenkov.safetyalert.domain.repository.ReportRepository
+import alex.kaplenkov.safetyalert.domain.repository.ViolationRepository
 import android.content.Context
 import dagger.Module
 import dagger.Provides
@@ -75,6 +76,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): LocalViolationRepository {
         return LocalViolationRepository(violationDao, syncRepository, context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideViolationRepository(
+        localViolationRepository: LocalViolationRepository
+    ): ViolationRepository {
+        return localViolationRepository
     }
 
 }

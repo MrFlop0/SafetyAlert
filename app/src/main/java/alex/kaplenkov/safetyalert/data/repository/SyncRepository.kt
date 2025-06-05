@@ -49,7 +49,6 @@ class SyncRepository @Inject constructor(
             .map { it?.syncStatus }
     }
 
-    // Синхронизирует конкретное нарушение
     suspend fun syncViolation(violationId: Long) {
         try {
             syncStatusDao.updateSyncStatus(violationId, SyncStatus.IN_PROGRESS, null)
@@ -59,11 +58,10 @@ class SyncRepository @Inject constructor(
                 return
             }
 
-            // Создаем заявку
             val orderRequest = CreateOrderRequest(
                 name = "Нарушение: ${violation.type}",
                 description = violation.description ?: "Нарушение ${violation.timestamp}",
-                priority_id = "df22a3db-df94-4728-b6e7-c1c210fca945" // Высокий приоритет
+                priority_id = "df22a3db-df94-4728-b6e7-c1c210fca945"
             )
 
             val response = apiService.createOrder(orderRequest)
@@ -118,6 +116,6 @@ class SyncRepository @Inject constructor(
 
     companion object {
         private const val MAX_RETRY_ATTEMPTS = 5
-        private const val RETRY_DELAY_MS = 30 * 60 * 1000L // 30 минут
+        private const val RETRY_DELAY_MS = 30 //* 60 * 1000L // 30 минут
     }
 }

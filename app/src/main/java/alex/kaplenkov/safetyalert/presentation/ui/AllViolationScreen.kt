@@ -38,9 +38,7 @@ fun AllViolationsScreen(
     viewModel: ViolationViewModel = hiltViewModel()
 ) {
     val allViolations by viewModel.allViolations.collectAsState()
-    val violationsByType by viewModel.violationsByType.collectAsState()
-    val violationsByWeek by viewModel.violationsByWeek.collectAsState()
-    val mostCommonViolationType by viewModel.mostCommonViolationType.collectAsState()
+    val statistics by viewModel.violationStatistics.collectAsState()
 
     Scaffold(
         topBar = {
@@ -64,9 +62,9 @@ fun AllViolationsScreen(
             item {
                 StatisticsSection(
                     violations = allViolations,
-                    violationsByType = violationsByType,
-                    violationsByWeek = violationsByWeek,
-                    mostCommonViolationType = mostCommonViolationType
+                    violationsByType = statistics.violationsByType,
+                    violationsByWeek = statistics.violationsByWeek,
+                    mostCommonViolationType = statistics.mostCommonViolationType
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))

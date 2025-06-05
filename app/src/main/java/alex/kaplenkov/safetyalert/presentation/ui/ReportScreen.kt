@@ -60,8 +60,7 @@ fun ReportScreen(
 ) {
     val violations by viewModel.getViolationsForSession(sessionId)
         .collectAsState(initial = emptyList())
-
-    val totalViolationsCount by viewModel.totalViolationsCount.collectAsState()
+    val statistics by viewModel.violationStatistics.collectAsState()
 
     LaunchedEffect(sessionId) {
         viewModel.endSession()
@@ -121,9 +120,9 @@ fun ReportScreen(
                         )
 
 
-                        if (totalViolationsCount > violations.size) {
+                        if (statistics.totalCount > violations.size) {
                             Text(
-                                text = "Всего нарушений в базе: $totalViolationsCount",
+                                text = "Всего нарушений в базе: ${statistics.totalCount}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray
                             )

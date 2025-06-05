@@ -1,39 +1,43 @@
 package alex.kaplenkov.safetyalert.presentation.viewmodel
 
-import alex.kaplenkov.safetyalert.data.repository.LocalViolationRepository
 import alex.kaplenkov.safetyalert.domain.model.Violation
+import alex.kaplenkov.safetyalert.domain.model.ViolationStatistics
+import alex.kaplenkov.safetyalert.domain.usecase.CalculateViolationStatisticsUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.DeleteViolationUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.GetAllViolationsUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.GetViolationByIdUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.GetViolationsForSessionUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.SaveViolationUseCase
+import alex.kaplenkov.safetyalert.domain.usecase.SessionManagementUseCase
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class ViolationViewModel @Inject constructor(
-    private val localViolationRepository: LocalViolationRepository
+    private val getAllViolationsUseCase: GetAllViolationsUseCase,
+    private val saveViolationUseCase: SaveViolationUseCase,
+    private val deleteViolationUseCase: DeleteViolationUseCase,
+    private val getViolationByIdUseCase: GetViolationByIdUseCase,
+    private val getViolationsForSessionUseCase: GetViolationsForSessionUseCase,
+    private val calculateViolationStatisticsUseCase: CalculateViolationStatisticsUseCase,
+    private val sessionManagementUseCase: SessionManagementUseCase
 ) : ViewModel() {
 
-    private val _currentSessionId = MutableStateFlow(generateSessionId())
-    val currentSessionId: StateFlow<String> = _currentSessionId
+    val currentSessionId: StateFlow<String> = sessionManagementUseCase.currentSessionId
+    val hasActiveSession: StateFlow<Boolean> = sessionManagementUseCase.hasActiveSession
 
-    private var _hasActiveSession = MutableStateFlow(false)
-    val hasActiveSession: StateFlow<Boolean> = _hasActiveSession
-
-    val allViolations = localViolationRepository
-        .getAllViolations()
+    val allViolations = getAllViolationsUseCase()
         .stateIn(
-            scope = viewModelScope,
+            scope =  viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = emptyList()
         )
@@ -46,8 +50,20 @@ class ViolationViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val totalViolationsCount: StateFlow<Int> = allViolations
-        .map { it.size }
+    val violationStatistics = calculateViolationStatisticsUseCase()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ViolationStatistics(
+                totalCount = 0,
+                violationsByType = emptyMap(),
+                violationsByWeek = emptyMap(),
+                mostCommonViolationType = null
+            )
+        )
+
+    val totalViolationsCount: StateFlow<Int> = violationStatistics
+        .map { it.totalCount }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -56,84 +72,33 @@ class ViolationViewModel @Inject constructor(
 
     fun saveViolation(violation: Violation, bitmap: Bitmap) {
         viewModelScope.launch {
-            localViolationRepository.saveViolation(violation, bitmap)
+            saveViolationUseCase(violation, bitmap)
         }
     }
 
     fun startNewSession() {
-        if (!_hasActiveSession.value) {
-            _currentSessionId.value = generateSessionId()
-            _hasActiveSession.value = true
-        }
+        sessionManagementUseCase.startNewSession()
     }
 
     fun endSession() {
-        _hasActiveSession.value = false
+        sessionManagementUseCase.endSession()
     }
 
     fun getViolationById(id: Long): Flow<Violation?> {
-        return localViolationRepository.getViolationById(id)
-    }
-
-    private fun generateSessionId(): String {
-        return UUID.randomUUID().toString()
+        return getViolationByIdUseCase(id)
     }
 
     fun deleteViolation(violationId: Long) {
         viewModelScope.launch {
-            localViolationRepository.deleteViolation(violationId)
+            deleteViolationUseCase(violationId)
         }
     }
-
-    val violationsByType: StateFlow<Map<String, Int>> = allViolations
-        .map { violations ->
-            violations.groupingBy { it.type }.eachCount()
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyMap()
-        )
-
-    val violationsByWeek: StateFlow<Map<String, Int>> = allViolations
-        .map { violations ->
-            violations
-                .groupBy { violation ->
-                    try {
-                        val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                            .parse(violation.timestamp)
-                        val calendar = Calendar.getInstance()
-                        calendar.time = date!!
-                        val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
-                        val year = calendar.get(Calendar.YEAR)
-                        "Week $weekOfYear, $year"
-                    } catch (e: Exception) {
-                        "Unknown"
-                    }
-                }
-                .mapValues { it.value.size }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyMap()
-        )
-
-    val mostCommonViolationType: StateFlow<String?> = violationsByType
-        .map { typeMap ->
-            typeMap.entries.maxByOrNull { it.value }?.key
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = null
-        )
 
     fun getViolationsForSession(sessionId: String): Flow<List<Violation>> {
         return if (sessionId.isEmpty()) {
             violations
         } else {
-            allViolations.map { list -> list.filter { it.sessionId == sessionId } }
+            getViolationsForSessionUseCase(sessionId)
         }
     }
 }
